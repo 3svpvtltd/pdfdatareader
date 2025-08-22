@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Upload & Summary</title>
+  <style>
+    /* General page styling */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #9face6);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Centered card container */
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      width: 600px;
+      max-width: 95%;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .custom-file-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      transition: 0.3s;
+    }
+
+    .custom-file-label:hover {
+      background-color: #45a049;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #2196F3;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-left: 10px;
+    }
+
+    button:hover {
+      background-color: #1976D2;
+    }
+
+    .output-section {
+      text-align: left;
+      margin-top: 20px;
+    }
+
+    pre {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Loader styling */
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Flashcard styling */
+    .flashcard {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0px 6px 15px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-top: 25px;
+      text-align: left;
+      transition: transform 0.3s ease;
+    }
+
+    .flashcard:hover {
+      transform: scale(1.03);
+    }
+
+    .flashcard h3 {
+      margin-top: 0;
+      color: #007BFF;
+    }
+       /* Navigation Bar */
+        nav {
+            background-color: #2C3E50;
+            color: white;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        nav span {
+            color: #FFD700;
+        }
+    
+  </style>
+</head>
+<body>
+     <!-- Navigation Bar -->
+    <nav>
+        Powered by <span>EduZen</span>
+    </nav>
+  <div class="container">
+    
+    <h2>📄 Upload PDF & Get Smart Summary</h2>
+
+    <input type="file" id="pdfFile" accept="application/pdf">
+    <label for="pdfFile" class="custom-file-label">Choose PDF</label>
+    <button onclick="uploadPDF()">Upload</button>
+
+    <!-- Loader -->
+    <div id="loader" class="loader"></div>
+
+    <!-- Extracted Content -->
+    <div class="output-section">
+      <h3>Extracted Content:</h3>
+      <pre id="output">Your extracted text will appear here...</pre>
+    </div>
+
+    <!-- Summary Flashcard -->
+    <div id="summaryCard" class="flashcard" style="display:none;">
+      <h3>✨ Summary</h3>
+      <p id="summary"></p>
+    </div>
+  </div>
+
+  <script>
+    async function uploadPDF() {
+      const fileInput = document.getElementById("pdfFile");
+      const loader = document.getElementById("loader");
+      const output = document.getElementById("output");
+
+      if (fileInput.files.length === 0) {
+        alert("Please select a PDF file first!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      loader.style.display = "block"; // Show loader
+      output.textContent = ""; // Clear old content
+      document.getElementById("summaryCard").style.display = "none";
+
+      try {
+        const response = await fetch("http://127.0.0.1:5000/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        loader.style.display = "none"; // Hide loader
+
+        if (data.error) {
+          output.textContent = data.error;
+        } else {
+          output.textContent = data.content;
+
+          // Show summary in flashcard
+          document.getElementById("summary").textContent = data.summary || "No summary generated.";
+          document.getElementById("summaryCard").style.display = "block";
+        }
+      } catch (error) {
+        loader.style.display = "none";
+        output.textContent = "⚠️ Something went wrong!";
+      }
+    }
+  </script>
+</body>
+</html>
